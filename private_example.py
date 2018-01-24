@@ -1,0 +1,2 @@
+binanceKey = ""
+binanceSecret = ""

@@ -1,5 +1,6 @@
 # Private files
 private.py
+activetrades.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
