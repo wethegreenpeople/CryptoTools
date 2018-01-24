@@ -10,15 +10,16 @@ def Buy(curpair, price, size):
 	except Exception as e:
 		return e
 
+# This function does the monititoring of prices & setting/resetting trades
 def Trailing(curpair, price, size, goal, originalPrice, stopLoss):
 	try:
 		binance = ccxt.binance()
 		binance.apiKey = private.binanceKey
 		binance.secret = private.binanceSecret
 		currentPrice = float(ccxt.binance().fetch_ticker(curpair)['last'])
+		# Price is the price we want to achieve before starting to trail
 		price = "{:.7f}".format(float(price))
-		#buyPair = auth_client.buy(size=size, product_id=curpair, type="market")
-		#time.sleep(5)
+		# This is the first order. Our lowest limit that we'll allow the price to hit before cutting our losses
 		stopLossSell = binance.createLimitSellOrder(curpair, size, stopLoss, { 'type': 'stop_loss_limit', 'stopPrice': "{:7f}".format(float(stopLoss)) })
 		#StoreOrder(str(stopLossSell["id"]), curpair, price, size, goal, originalPrice, stopLoss)
 		print("Order: " + str(stopLossSell["id"]))
@@ -27,9 +28,11 @@ def Trailing(curpair, price, size, goal, originalPrice, stopLoss):
 		time.sleep(5)
 		while (stopLossSell["status"] != "closed"):
 			currentPrice = float(ccxt.binance().fetch_ticker(curpair)['last'])
-			doot = "Bought: {0:9} Current: {1:9} Stop: {2:9} Take: {3:9} Goal(%): {4:9}".format(str(originalPrice), str(currentPrice), str(stopLossSell["price"]), str(price), str(goal))
-			print(doot)
+			pairInfo = "Bought: {0:9} Current: {1:9} Stop: {2:9} Take: {3:9} Goal(%): {4:9}".format(str(originalPrice), str(currentPrice), str(stopLossSell["price"]), str(price), str(goal))
+			print(pairInfo)
+			# If we've reached the point where we want to start a trail
 			if ("{:.7f}".format(float(currentPrice)) > "{:.7f}".format(float(price))):
+				# We're going to set our trailing price 1% lower than our take price (if we want to take at 5% we'll set our trail at 4%)
 				trailingPrice = GetPercentage(curpair, goal - 1, priceToUse=originalPrice)
 				print("Setting take profit: " + str(trailingPrice))
 				#DeleteOrder(str(stopLossSell["id"]))
@@ -65,6 +68,8 @@ def StoreOrder(orderID, curpair, price, size, goal, originalPrice, stopLoss):
 def DeleteOrder(orderID):
 	os.remove(str(orderID))
 
+# Here we're calculating the actual number values based on %'s we want to achieve
+# Need to rewrite, it's not a great implementation
 def GetPercentage(curpair, goal, stopLoss=False, priceToUse=0):
 	try:
 		curpair = int(curpair)
